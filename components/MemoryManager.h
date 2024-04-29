@@ -32,6 +32,7 @@ public:
 
     //Utilites
     MemoryItem accessMemoryAtAddress(const int& processID, const unsigned long long& address);
+    unsigned long long getPageNumber(const unsigned long long& address);
 private:
     unsigned long long amountOfRam_;
     unsigned int pageSize_;

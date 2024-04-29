@@ -7,14 +7,18 @@
     @post   Disks, frame, and page enumerations all start from 0
 */
 SimOS::SimOS(int numberOfDisks, unsigned long long amountOfRAM, unsigned int pageSize):
-    processCount_{0},
-    ram_{amountOfRAM, pageSize}
+    ram_{amountOfRAM, pageSize},
+    cpu_{},
+    allProcesses_{},
+    waitingProcesses_{}
 {
     for(int i = 0; i < numberOfDisks; i++)
     {
         DiskManager disk;
         disks_.push_back(disk);
     }
+    Process OS_PROCESS(0, NO_PROCESS);
+    allProcesses_.push_back(OS_PROCESS);
 }
 
 /*
@@ -26,8 +30,8 @@ SimOS::SimOS(int numberOfDisks, unsigned long long amountOfRAM, unsigned int pag
 */
 void SimOS::NewProcess()
 {
-    processCount_++;
-    Process newProcess(processCount_);
+    Process newProcess(allProcesses_.size(), NEW);
+    allProcesses_.push_back(newProcess);
     cpu_.addProcess(newProcess);
 }
 
@@ -41,8 +45,9 @@ void SimOS::SimFork()
 {
   //This method needs updating because at the time of writing, process's memory behavior is undefined
     if(cpu_.isBusy()){
-        processCount_++;
-        Process childProcess(processCount_, NEW, CHILD, cpu_.getCurrentProcessID());
+        cpu_.getCurrentProcess().setProcessType(PARENT);
+        Process childProcess(allProcesses_.size(), NEW, CHILD, cpu_.getCurrentProcessID());
+        cpu_.getCurrentProcess().addChildProcessID(childProcess.getProcessID());
         cpu_.addProcess(childProcess);
     }
     else
@@ -59,10 +64,47 @@ void SimOS::SimFork()
 
     @note   If a disk with the requested number doesn’t exist throw std::out_of_range exception.
     @note   If instruction is called that requires a running process, but the CPU is idle, throw std::logic_error exception.
+    @note   The system will be implementing cascading termination
+            This means that if a process terminates, all of its children will terminate with it as well
 */
 void SimOS::SimExit()
 {
-
+    if(cpu_.isBusy()){
+        switch (cpu_.getCurrentProcess().getProcessType())
+        {
+        case PARENT:
+            for(int i = 0; i < cpu_.getCurrentProcess().getChildProcesses().size()-1; i++)
+            {
+                int childProcess = cpu_.getCurrentProcess().getChildProcesses()[i];
+                allProcesses_[childProcess].setProcessState(TERMINATED);
+            }
+            // Remember to free up memory for parent and children
+            cpu_.getCurrentProcess().setProcessState(TERMINATED);
+            cpu_.runFirstProcess();
+            break;
+        case CHILD:
+            for(std::vector<Process>::iterator i = waitingProcesses_.begin(); i != waitingProcesses_.end(); i++)
+            {
+                if(i->getProcessID() == cpu_.getCurrentProcess().getParentProcessID())
+                {
+                    cpu_.addProcess(*i);
+                    waitingProcesses_.erase(i);
+                    break;
+                }
+            }
+            // Remember to free up memory
+            cpu_.getCurrentProcess().setProcessState(TERMINATED);
+            cpu_.runFirstProcess();
+            break;
+        default:
+            // Remember to free up memory
+            cpu_.getCurrentProcess().setProcessState(TERMINATED);
+            cpu_.runFirstProcess();
+            break;
+        }
+    }
+    else
+        throw std::logic_error("This instruction requires a running process");
 }
 
 /*
@@ -78,11 +120,18 @@ void SimOS::SimWait()
     if(cpu_.isBusy())
     {
         Process currProcess = std::move(cpu_.getCurrentProcess());
-        cpu_.processWait(currProcess);
+        currProcess.setProcessState(WAITING);
         //Need to define functionality that relates to zombie-children
-        if(!currProcess.getChildProcesses().empty())
+        //Maybe having it so that when any child terminates, the waiting process automatically goes to the ready queue
+        for(int i = 0; i < currProcess.getChildProcesses().size(); i++)
         {
-            cpu_.processFinishedWaiting(currProcess);
+            if(allProcesses_[i].getProcessType() == ZOMBIE)
+            {
+                allProcesses_[i].setProcessState(TERMINATED);
+                break;
+            }
+            else if(i == currProcess.getChildProcesses().size())
+                cpu_.runFirstProcess();
         }
     }
     else
@@ -133,7 +182,7 @@ void SimOS::DiskJobCompleted(int diskNumber)
     else
     {
         std::cout << "Disk " << diskNumber << " is reporting that a single job is complete. Process " << disks_[diskNumber].getCurrentProcess().PID << " has been moved to the ready-queue." << std::endl;
-        
+        // Remember to add the functionality that puts the process back into the ready queue
     }
 }
 

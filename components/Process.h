@@ -3,8 +3,8 @@
 #include <vector>
 
 constexpr int NO_PROCESS{0};    //Placeholder value used to indicate that there is no process
-constexpr int NEW{1};           //Indicates that the process was just created
-constexpr int READY{2};         //Indicates that the process is currently in the ready queue
+constexpr int NEW{1};           //Indicates that the process was just created and has not yet entered the ready-queue
+constexpr int READY{2};         //Indicates that the process is in the ready queue
 constexpr int RUNNING{3};       //Indicates that the process is currently running
 constexpr int WAITING{4};       //Indicates that the process is in an I/O queue (most likely the disk queue)
 constexpr int TERMINATED{5};    //Indicates that the process is terminated. Terminated processes hold no memory or disk space

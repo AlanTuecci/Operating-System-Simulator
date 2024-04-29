@@ -6,10 +6,9 @@
             Current Process is set to some dummy process with PID 0 and state 'NO_PROCESS'
 */
 CPUManager::CPUManager(): 
-    readyQueue_{0}, cpu_{0}
+    readyQueue_{0}, cpu_{0},
+    currentProcess_{0, NO_PROCESS}
 {
-    currentProcess_.setProcessID(0);
-    currentProcess_.setProcessState(NO_PROCESS);
 }
 
 /*
@@ -114,29 +113,6 @@ void CPUManager::timerInterrupt()
     currentProcess.setProcessState(READY);
     addProcess(currentProcess);
 }
-
-/*
-    @param  An Lvalue reference to a process object
-    @post   The process object is added to a waiting process record
-            The process's state is set to WAITING
-*/
-void CPUManager::processWait(Process& process)
-{
-    process.setProcessState(WAITING);
-    waitingProcesses_.push_back(process);
-}   
-
-/*
-    @param  An Lvalue reference to a process object
-    @post   The process object is removed from the waiting list and added to the ready queue
-            The process's state is set to READY
-*/
-void CPUManager::processFinishedWaiting(Process& process)
-{
-    waitingProcesses_.remove(process);
-    process.setProcessState(READY);
-    readyQueue_.push_back(process);
-}   
 
 /*
     @return A flag that indicates whether or not the CPU is currently running a process

@@ -20,8 +20,6 @@ public:
     void runFirstProcess();
     void killRunningProcess();
     void timerInterrupt();
-    void processWait(Process& process);
-    void processFinishedWaiting(Process& process);
 
     //Getters
     bool isBusy() const;

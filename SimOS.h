@@ -28,6 +28,8 @@ private:
     CPUManager cpu_;
     std::vector<DiskManager> disks_;
     MemoryManager ram_;
-    int processCount_;
+
+    std::vector<Process> allProcesses_;
+    std::vector<Process> waitingProcesses_;
 };
 #endif

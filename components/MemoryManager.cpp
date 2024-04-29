@@ -63,3 +63,8 @@ MemoryItem MemoryManager::accessMemoryAtAddress(const int& processID, const unsi
     if(memoryItem.frameNumber == -1)
         throw std::out_of_range("The frame number could not be found for this process. (This should NEVER happen so if you get this error, check the logic).");
 }
+
+unsigned long long MemoryManager::getPageNumber(const unsigned long long& address)
+{
+    return address / pageSize_;
+}
