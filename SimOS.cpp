@@ -45,9 +45,10 @@ void SimOS::SimFork()
 {
   //This method needs updating because at the time of writing, process's memory behavior is undefined
     if(cpu_.isBusy()){
-        cpu_.getCurrentProcess().setProcessType(PARENT);
-        Process childProcess(allProcesses_.size(), NEW, CHILD, cpu_.getCurrentProcessID());
-        cpu_.getCurrentProcess().addChildProcessID(childProcess.getProcessID());
+        std::vector<Process>::iterator currProcess = findProcess(cpu_.getCurrentProcess());
+        currProcess->setProcessType(PARENT);
+        Process childProcess(allProcesses_.size(), NEW, CHILD, currProcess->getProcessID());
+        currProcess->addChildProcessID(childProcess.getProcessID());
         cpu_.addProcess(childProcess);
     }
     else
@@ -70,38 +71,21 @@ void SimOS::SimFork()
 void SimOS::SimExit()
 {
     if(cpu_.isBusy()){
-        switch (cpu_.getCurrentProcess().getProcessType())
+        std::vector<Process>::iterator currProcess = findProcess(cpu_.getCurrentProcess());
+        switch (currProcess->getProcessType())
         {
         case PARENT:
-            for(int i = 0; i < cpu_.getCurrentProcess().getChildProcesses().size()-1; i++)
-            {
-                int childProcess = cpu_.getCurrentProcess().getChildProcesses()[i];
-                allProcesses_[childProcess].setProcessState(TERMINATED);
-            }
-            // Remember to free up memory for parent and children
-            cpu_.getCurrentProcess().setProcessState(TERMINATED);
-            cpu_.runFirstProcess();
+            findChildrenProcessesAndTerminateThem();
+            findParentProcessAndResumeIt(); //Parents could have parents, and if they do, and they're waiting, find them and resume them
+            // Remember to free up memory
             break;
         case CHILD:
-            for(std::vector<Process>::iterator i = waitingProcesses_.begin(); i != waitingProcesses_.end(); i++)
-            {
-                if(i->getProcessID() == cpu_.getCurrentProcess().getParentProcessID())
-                {
-                    cpu_.addProcess(*i);
-                    waitingProcesses_.erase(i);
-                    break;
-                }
-            }
+            findParentProcessAndResumeIt();
             // Remember to free up memory
-            cpu_.getCurrentProcess().setProcessState(TERMINATED);
-            cpu_.runFirstProcess();
-            break;
-        default:
-            // Remember to free up memory
-            cpu_.getCurrentProcess().setProcessState(TERMINATED);
-            cpu_.runFirstProcess();
             break;
         }
+        currProcess->setProcessState(TERMINATED);
+        cpu_.runFirstProcess();
     }
     else
         throw std::logic_error("This instruction requires a running process");
@@ -119,20 +103,12 @@ void SimOS::SimWait()
 {
     if(cpu_.isBusy())
     {
-        Process currProcess = std::move(cpu_.getCurrentProcess());
-        currProcess.setProcessState(WAITING);
+        std::vector<Process>::iterator currProcess = findProcess(cpu_.getCurrentProcess());
+        cpu_.runFirstProcess();
+        currProcess->setProcessState(WAITING);
+        waitingProcesses_.push_back(*currProcess);
         //Need to define functionality that relates to zombie-children
-        //Maybe having it so that when any child terminates, the waiting process automatically goes to the ready queue
-        for(int i = 0; i < currProcess.getChildProcesses().size(); i++)
-        {
-            if(allProcesses_[i].getProcessType() == ZOMBIE)
-            {
-                allProcesses_[i].setProcessState(TERMINATED);
-                break;
-            }
-            else if(i == currProcess.getChildProcesses().size())
-                cpu_.runFirstProcess();
-        }
+        //For the part where the process waits for the children to terminate in order to resume, try adding this functionality in the SimExit function
     }
     else
         throw std::logic_error("This instruction requires a running process");
@@ -267,4 +243,57 @@ std::deque<FileReadRequest> SimOS::GetDiskQueue(int diskNumber)
         throw std::out_of_range("The disk with the requested number does not exist");
     else
         return disks_[diskNumber].getDiskQueue();
+}
+
+void SimOS::findParentProcessAndResumeIt()
+{   
+    bool foundWaitingParent = false; //Used for Debugging
+    const int parentProcessID = cpu_.getCurrentProcess().getParentProcessID();
+    if(parentProcessID != 0)
+    {
+        for(std::vector<Process>::iterator i = waitingProcesses_.begin(); i != waitingProcesses_.end(); i++)
+        {
+            if(i->getProcessID() == parentProcessID)
+            {
+                foundWaitingParent = true; //Used for debugging
+                cpu_.addProcess(*i);
+                waitingProcesses_.erase(i);
+                break;
+            }
+        }
+        //Anything below here is used for debugging
+        if(!foundWaitingParent)
+            std::cout << "Could not find waiting parent!" << std::endl;
+        else
+            std::cout << "Parent with PID: *" << parentProcessID << "* found and added back to ready-queue!" << std::endl;
+    }
+}
+
+void SimOS::findChildrenProcessesAndTerminateThem()
+{
+    std::vector<Process>::iterator currProcess = findProcess(cpu_.getCurrentProcess());
+    bool foundChildProcess = false;
+    for(int i = 0; i < currProcess->getChildProcesses().size()-1; i++)
+    {
+        foundChildProcess = true;
+        int childProcess = currProcess->getChildProcesses()[i];
+        allProcesses_[childProcess].setProcessState(TERMINATED);
+    }
+    //Anything below is used for debugging
+    if(foundChildProcess)
+        std::cout << "Found children processes and terminated them!" << std::endl;
+}
+
+std::vector<Process>::iterator SimOS::findProcess(const Process& process)
+{
+    std::vector<Process>::iterator iteratorToProcess = allProcesses_.begin();
+    for(iteratorToProcess; iteratorToProcess != allProcesses_.end(); iteratorToProcess++)
+    {
+        if(*iteratorToProcess == process)
+            break;
+    }
+    if(iteratorToProcess == allProcesses_.begin())
+        throw std::logic_error("The process does not exist in the Process Record!");
+    else
+        return iteratorToProcess;
 }

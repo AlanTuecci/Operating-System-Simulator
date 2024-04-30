@@ -24,6 +24,11 @@ public:
     MemoryUsage GetMemory();
     FileReadRequest GetDisk(int diskNumber);
     std::deque<FileReadRequest> GetDiskQueue(int diskNumber);
+
+    //Helper functions
+    void findParentProcessAndResumeIt();
+    void findChildrenProcessesAndTerminateThem();
+    std::vector<Process>::iterator findProcess(const Process& process);
 private:
     CPUManager cpu_;
     std::vector<DiskManager> disks_;
