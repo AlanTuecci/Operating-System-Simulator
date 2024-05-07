@@ -1,5 +1,5 @@
-#ifndef PROCESS.H
-#define PROCESS.H
+#ifndef PROCESS_H
+#define PROCESS_H
 #include <vector>
 
 constexpr int NO_PROCESS{0};    //Placeholder value used to indicate that there is no process

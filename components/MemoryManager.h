@@ -1,5 +1,5 @@
-#ifndef MEMORYMANAGER.H
-#define MEMORYMANAGER.H
+#ifndef MEMORYMANAGER_H
+#define MEMORYMANAGER_H
 #include <iostream>
 #include <vector>
 #include "Process.h"

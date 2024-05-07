@@ -141,6 +141,14 @@ void SimOS::TimerInterrupt()
 */
 void SimOS::DiskReadRequest(int diskNumber, std::string fileName)
 {
+    if(diskNumber >= disks_.size())
+        throw std::out_of_range("The disk with the requested number does not exist");
+    else
+    {
+        FileReadRequest newRequest{cpu_.getCurrentProcessID(), fileName};
+        disks_[diskNumber].addToQueue(newRequest);
+        disks_[diskNumber].add
+    }
 }
 
 /*

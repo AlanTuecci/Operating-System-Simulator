@@ -1,5 +1,5 @@
-#ifndef SIMOS.H
-#define SIMOS.H
+#ifndef SIMOS_H
+#define SIMOS_H
 #include <vector>
 #include <deque>
 #include "./components/CPUManager.h"

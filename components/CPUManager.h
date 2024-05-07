@@ -1,5 +1,5 @@
-#ifndef CPUMANAGER.H
-#define CPUMANAGER.H
+#ifndef CPUMANAGER_H
+#define CPUMANAGER_H
 #include <deque>
 #include <list>
 #include <iostream>

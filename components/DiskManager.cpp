@@ -5,7 +5,7 @@
 DiskManager::DiskManager():
     diskState_{IDLE},
     diskQueue_{},
-    currentProcess_{}
+    currentFileReadRequest_{}
 {
 }
 
@@ -21,9 +21,14 @@ void DiskManager::setDiskQueue(const std::deque<FileReadRequest>& diskQueue)
     diskQueue_ = diskQueue;
 }
 
-void DiskManager::setCurrentProcess(const FileReadRequest& currentProcess)
+void DiskManager::setCurrentFileReadRequest(const FileReadRequest& fileReadRequest)
 {
-    currentProcess_ = currentProcess;
+    currentFileReadRequest_ = fileReadRequest;
+}
+
+void DiskManager::setCurrentProcess(const Process& process)
+{
+    currentProcess_ = process;
 }
 
 //--------------------------------------------Getters--------------------------------------------
@@ -38,16 +43,21 @@ std::deque<FileReadRequest> DiskManager::getDiskQueue() const
     return diskQueue_;
 }
 
-FileReadRequest DiskManager::getCurrentProcess()
+FileReadRequest DiskManager::getCurrentFileReadRequest()
 {
     switch (diskState_)
     {
     case IDLE:
-        clearCurrentProcess();
-        return currentProcess_;     
+        clearCurrentFileReadRequest();
+        return currentFileReadRequest_;     
     case BUSY:
-        return currentProcess_;
+        return currentFileReadRequest_;
     }
+}
+
+Process DiskManager::getCurrentProcess() const
+{
+    return currentProcess_;
 }
 
 //--------------------------------------------Utilities--------------------------------------------
@@ -61,15 +71,20 @@ void DiskManager::serveNextProcess()
 {
     if(!diskQueue_.empty())
     {
-        currentProcess_ = diskQueue_.front();
+        currentFileReadRequest_ = diskQueue_.front();
         diskQueue_.pop_front();
     }
     else
         throw std::logic_error("The disk queue is empty, so there is no other process to run!");
 }
 
-void DiskManager::clearCurrentProcess()
+void DiskManager::clearCurrentFileReadRequest()
 {
-    currentProcess_.fileName = "";
-    currentProcess_.PID = 0;
+    currentFileReadRequest_.fileName = "";
+    currentFileReadRequest_.PID = 0;
+}
+
+void DiskManager::addProcess(const Process& process)
+{
+    processQueue_.push_back(process);
 }

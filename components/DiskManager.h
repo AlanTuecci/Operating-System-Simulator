@@ -1,5 +1,5 @@
-#ifndef DISKMANAGER.H
-#define DISKMANAGER.H
+#ifndef DISKMANAGER_H
+#define DISKMANAGER_H
 #include <iostream>
 #include <deque>
 
@@ -24,21 +24,26 @@ public:
     //Setters
     void setDiskState(const DiskState& diskState);
     void setDiskQueue(const std::deque<FileReadRequest>& diskQueue);
-    void setCurrentProcess(const FileReadRequest& currentProcess);
+    void setCurrentFileReadRequest(const FileReadRequest& fileReadRequest);
+    void setCurrentProcess(const Process& process);
 
     //Getters
     DiskState getDiskState() const;
     std::deque<FileReadRequest> getDiskQueue() const;
-    FileReadRequest getCurrentProcess();
+    FileReadRequest getCurrentFileReadRequest();
+    Process getCurrentProcess() const;
 
     //Utilities
     void addToQueue(const FileReadRequest& fileReadRequest);
     void serveNextProcess();
-    void clearCurrentProcess();
+    void clearCurrentFileReadRequest();
+    void addProcess(const Process& process);
 private:
     DiskState diskState_;
     std::deque<FileReadRequest> diskQueue_;
-    FileReadRequest currentProcess_;
+    FileReadRequest currentFileReadRequest_;
+    std::deque<Process> processQueue_;
+    Process currentProcess_;
 };
 #endif
 
