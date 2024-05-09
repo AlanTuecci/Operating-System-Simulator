@@ -1,5 +1,6 @@
 #ifndef DISKMANAGER_H
 #define DISKMANAGER_H
+#include "Process.h"
 #include <iostream>
 #include <deque>
 
@@ -9,12 +10,6 @@ struct FileReadRequest
     std::string fileName{""};
 };
 
-enum DiskState
-{
-    IDLE,
-    BUSY
-};
-
 class DiskManager
 {
 public:
@@ -22,28 +17,25 @@ public:
     DiskManager();
 
     //Setters
-    void setDiskState(const DiskState& diskState);
-    void setDiskQueue(const std::deque<FileReadRequest>& diskQueue);
+    void setDiskQueue(const std::deque<std::pair<FileReadRequest,Process>>& diskQueue);
     void setCurrentFileReadRequest(const FileReadRequest& fileReadRequest);
     void setCurrentProcess(const Process& process);
+    void setCurrentJob(const std::pair<FileReadRequest,Process>& job);
 
     //Getters
-    DiskState getDiskState() const;
-    std::deque<FileReadRequest> getDiskQueue() const;
+    std::deque<std::pair<FileReadRequest,Process>> getDiskQueue() const;
     FileReadRequest getCurrentFileReadRequest();
     Process getCurrentProcess() const;
+    std::pair<FileReadRequest, Process> getCurrentJob() const;
+    std::deque<FileReadRequest> getWaitingFileReadRequests();
 
     //Utilities
-    void addToQueue(const FileReadRequest& fileReadRequest);
+    void addToQueue(const std::pair<FileReadRequest, Process>& job);
     void serveNextProcess();
-    void clearCurrentFileReadRequest();
-    void addProcess(const Process& process);
+    void clearCurrentJob();
 private:
-    DiskState diskState_;
-    std::deque<FileReadRequest> diskQueue_;
-    FileReadRequest currentFileReadRequest_;
-    std::deque<Process> processQueue_;
-    Process currentProcess_;
+    std::pair<FileReadRequest, Process> currentJob_;
+    std::deque<std::pair <FileReadRequest, Process>> diskQueue_;
 };
 #endif
 

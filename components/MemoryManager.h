@@ -31,13 +31,13 @@ public:
     MemoryUsage getMemoryUsage() const;
 
     //Utilites
-    MemoryItem accessMemoryAtAddress(const int& processID, const unsigned long long& address);
+    void accessMemoryAtAddress(const int& processID, const unsigned long long& address);
     unsigned long long getPageNumber(const unsigned long long& address);
 private:
     unsigned long long amountOfRam_;
     unsigned int pageSize_;
     unsigned int numPages_;
     std::vector<MemoryItem> memory_;
-    std::vector<MemoryItem> recentlyUsed_;
+    MemoryItem recentlyUsed_;
 };
 #endif

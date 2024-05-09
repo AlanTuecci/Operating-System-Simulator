@@ -44,24 +44,11 @@ MemoryUsage MemoryManager::getMemoryUsage() const
     return memory_;
 }
 
-MemoryItem MemoryManager::accessMemoryAtAddress(const int& processID, const unsigned long long& address)
+void MemoryManager::accessMemoryAtAddress(const int& processID, const unsigned long long& address)
 {
-    MemoryItem memoryItem;
-    memoryItem.pageNumber = address / pageSize_;
-    memoryItem.frameNumber = -1;
-    memoryItem.PID = processID;
-    
-    for(std::vector<MemoryItem>::iterator i = memory_.begin(); i != memory_.end(); i++)
-    {
-        if((i->pageNumber == memoryItem.pageNumber) && (i->PID == memoryItem.PID))
-        {
-            memoryItem.frameNumber = i->frameNumber;
-            return memoryItem;
-        }
-    }
-
-    if(memoryItem.frameNumber == -1)
-        throw std::out_of_range("The frame number could not be found for this process. (This should NEVER happen so if you get this error, check the logic).");
+    recentlyUsed_.pageNumber = address / pageSize_;
+    recentlyUsed_.frameNumber = -1;
+    recentlyUsed_.PID = processID;
 }
 
 unsigned long long MemoryManager::getPageNumber(const unsigned long long& address)

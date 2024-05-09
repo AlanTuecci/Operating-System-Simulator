@@ -3,88 +3,97 @@
 //--------------------------------------------Constructors--------------------------------------------
 
 DiskManager::DiskManager():
-    diskState_{IDLE},
-    diskQueue_{},
-    currentFileReadRequest_{}
+    diskQueue_{}
 {
+    FileReadRequest noJobFile{0, ""};
+    Process noJobProcess(0, NO_PROCESS);
+    currentJob_.first = noJobFile;
+    currentJob_.second = noJobProcess;
 }
 
 //--------------------------------------------Setters--------------------------------------------
 
-void DiskManager::setDiskState(const DiskState& diskState)
-{
-    diskState_ = diskState;
-}
-
-void DiskManager::setDiskQueue(const std::deque<FileReadRequest>& diskQueue)
+void DiskManager::setDiskQueue(const std::deque<std::pair<FileReadRequest, Process>>& diskQueue)
 {
     diskQueue_ = diskQueue;
 }
 
 void DiskManager::setCurrentFileReadRequest(const FileReadRequest& fileReadRequest)
 {
-    currentFileReadRequest_ = fileReadRequest;
+    currentJob_.first = fileReadRequest;
 }
 
 void DiskManager::setCurrentProcess(const Process& process)
 {
-    currentProcess_ = process;
+    currentJob_.second = process;
+}
+
+void DiskManager::setCurrentJob(const std::pair<FileReadRequest, Process>& job)
+{
+    currentJob_ = job;
 }
 
 //--------------------------------------------Getters--------------------------------------------
 
-DiskState DiskManager::getDiskState() const
-{
-    return diskState_;
-}
-
-std::deque<FileReadRequest> DiskManager::getDiskQueue() const
+std::deque<std::pair<FileReadRequest,Process>> DiskManager::getDiskQueue() const
 {
     return diskQueue_;
 }
 
 FileReadRequest DiskManager::getCurrentFileReadRequest()
 {
-    switch (diskState_)
-    {
-    case IDLE:
-        clearCurrentFileReadRequest();
-        return currentFileReadRequest_;     
-    case BUSY:
-        return currentFileReadRequest_;
-    }
+    return currentJob_.first;
 }
 
 Process DiskManager::getCurrentProcess() const
 {
-    return currentProcess_;
+    return currentJob_.second;
+}
+
+std::pair<FileReadRequest, Process> DiskManager::getCurrentJob() const
+{
+    return currentJob_;
+}
+
+std::deque<FileReadRequest> DiskManager::getWaitingFileReadRequests() 
+{
+    std::deque<FileReadRequest> waitingFileReadRequests;
+    for(std::deque<std::pair<FileReadRequest, Process>>::iterator i = diskQueue_.begin(); i != diskQueue_.end(); i++)
+    {
+        waitingFileReadRequests.push_back(i->first);
+    }
+    return waitingFileReadRequests;
 }
 
 //--------------------------------------------Utilities--------------------------------------------
 
-void DiskManager::addToQueue(const FileReadRequest& fileReadRequest)
+void DiskManager::addToQueue(const std::pair<FileReadRequest,Process>& job)
 {
-    diskQueue_.push_back(fileReadRequest);
+    if(currentJob_.second.getProcessState() == NO_PROCESS)
+        currentJob_ = job;
+    else
+        diskQueue_.push_back(job);
 }
 
 void DiskManager::serveNextProcess()
 {
     if(!diskQueue_.empty())
     {
-        currentFileReadRequest_ = diskQueue_.front();
+        currentJob_ = diskQueue_.front();
         diskQueue_.pop_front();
     }
     else
-        throw std::logic_error("The disk queue is empty, so there is no other process to run!");
+    {
+        std::cout << "There are no other jobs waiting. Disk is now idle!" << std::endl;
+        clearCurrentJob();
+    }
 }
 
-void DiskManager::clearCurrentFileReadRequest()
+void DiskManager::clearCurrentJob()
 {
-    currentFileReadRequest_.fileName = "";
-    currentFileReadRequest_.PID = 0;
-}
+    currentJob_.first.fileName = "";
+    currentJob_.first.PID = 0;
 
-void DiskManager::addProcess(const Process& process)
-{
-    processQueue_.push_back(process);
+    Process emptyProcess(0, NO_PROCESS);
+    currentJob_.second = emptyProcess;
 }

@@ -32,6 +32,8 @@ CPUManager& CPUManager::operator=(const CPUManager& rhs)
     readyQueue_ = std::move(rhs.readyQueue_);
     currentProcess_ = std::move(rhs.currentProcess_);
     cpu_ = rhs.cpu_;
+
+    return *this;
 }  
 
 /*
@@ -55,6 +57,8 @@ CPUManager& CPUManager::operator=(CPUManager&& rhs)
     readyQueue_ = std::move(rhs.readyQueue_);
     currentProcess_ = std::move(rhs.currentProcess_);
     cpu_ = rhs.cpu_;
+
+    return *this;
 }       
 
 /*
@@ -64,7 +68,7 @@ CPUManager& CPUManager::operator=(CPUManager&& rhs)
 */
 void CPUManager::addProcess(Process &process)
 {
-    if (currentProcess_.getProcessState() != NO_PROCESS)
+    if (currentProcess_.getProcessState() != NO_PROCESS && currentProcess_.getProcessID() != 0)
     {
         process.setProcessState(READY);
         readyQueue_.push_back(process);

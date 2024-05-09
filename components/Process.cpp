@@ -120,6 +120,8 @@ Process& Process::operator=(const Process& rhs)
     processType_ = rhs.processType_;
     childProcesses_ = std::move(rhs.childProcesses_);
     parentProcessID_ = rhs.parentProcessID_;
+
+    return *this;
 }
 
 /*
@@ -147,6 +149,8 @@ Process& Process::operator=(Process&& rhs)
     processType_ = rhs.processType_;
     childProcesses_ = std::move(childProcesses_);
     parentProcessID_ = rhs.parentProcessID_;
+
+    return *this;
 }
 
 /*

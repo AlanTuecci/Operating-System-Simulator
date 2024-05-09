@@ -141,13 +141,14 @@ void SimOS::TimerInterrupt()
 */
 void SimOS::DiskReadRequest(int diskNumber, std::string fileName)
 {
-    if(diskNumber >= disks_.size())
+    if(diskNumber >= disks_.size() || diskNumber < 0)
         throw std::out_of_range("The disk with the requested number does not exist");
     else
     {
         FileReadRequest newRequest{cpu_.getCurrentProcessID(), fileName};
-        disks_[diskNumber].addToQueue(newRequest);
-        disks_[diskNumber].add
+        std::pair<FileReadRequest, Process> job{newRequest, cpu_.getCurrentProcess()};
+        disks_[diskNumber].addToQueue(job);
+        cpu_.runFirstProcess();
     }
 }
 
@@ -165,8 +166,10 @@ void SimOS::DiskJobCompleted(int diskNumber)
         throw std::out_of_range("The disk with the requested number does not exist");
     else
     {
-        std::cout << "Disk " << diskNumber << " is reporting that a single job is complete. Process " << disks_[diskNumber].getCurrentProcess().PID << " has been moved to the ready-queue." << std::endl;
-        // Remember to add the functionality that puts the process back into the ready queue
+        std::cout << "Disk " << diskNumber << " is reporting that a single job is complete. Process " << disks_[diskNumber].getCurrentFileReadRequest().PID << " has been moved to the ready-queue." << std::endl;
+        Process currentProcess = disks_[diskNumber].getCurrentProcess();
+        cpu_.addProcess(currentProcess);
+        disks_[diskNumber].clearCurrentJob();
     }
 }
 
@@ -236,7 +239,7 @@ FileReadRequest SimOS::GetDisk(int diskNumber)
     if(diskNumber >= disks_.size())
         throw std::out_of_range("The disk with the requested number does not exist");
     else
-        return disks_[diskNumber].getCurrentProcess();
+        return disks_[diskNumber].getCurrentFileReadRequest();
 
 }
 
@@ -250,7 +253,9 @@ std::deque<FileReadRequest> SimOS::GetDiskQueue(int diskNumber)
     if(diskNumber >= disks_.size())
         throw std::out_of_range("The disk with the requested number does not exist");
     else
-        return disks_[diskNumber].getDiskQueue();
+    {
+        return disks_[diskNumber].getWaitingFileReadRequests();
+    }
 }
 
 void SimOS::findParentProcessAndResumeIt()
