@@ -27,7 +27,7 @@ public:
 
     //Helper functions
     void findParentProcessAndResumeIt();
-    void findChildrenProcessesAndTerminateThem();
+    void findChildrenProcessesAndTerminateThem(const std::vector<Process>::iterator& currProcess);
     std::vector<Process>::iterator findProcess(const Process& process);
 private:
     CPUManager cpu_;

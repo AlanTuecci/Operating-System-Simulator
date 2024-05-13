@@ -72,10 +72,11 @@ void SimOS::SimExit()
 {
     if(cpu_.isBusy()){
         std::vector<Process>::iterator currProcess = findProcess(cpu_.getCurrentProcess());
+        ram_.findAndClearMemoryUsedByAProcess(currProcess->getProcessID());
         switch (currProcess->getProcessType())
         {
         case PARENT:
-            findChildrenProcessesAndTerminateThem();
+            findChildrenProcessesAndTerminateThem(currProcess);
             findParentProcessAndResumeIt(); //Parents could have parents, and if they do, and they're waiting, find them and resume them
             // Remember to free up memory
             break;
@@ -85,6 +86,7 @@ void SimOS::SimExit()
             break;
         }
         currProcess->setProcessState(TERMINATED);
+        cpu_.killRunningProcess();
         cpu_.runFirstProcess();
     }
     else
@@ -166,7 +168,6 @@ void SimOS::DiskJobCompleted(int diskNumber)
         throw std::out_of_range("The disk with the requested number does not exist");
     else
     {
-        std::cout << "Disk " << diskNumber << " is reporting that a single job is complete. Process " << disks_[diskNumber].getCurrentFileReadRequest().PID << " has been moved to the ready-queue." << std::endl;
         Process currentProcess = disks_[diskNumber].getCurrentProcess();
         cpu_.addProcess(currentProcess);
         disks_[diskNumber].clearCurrentJob();
@@ -225,6 +226,7 @@ std::deque<int> SimOS::GetReadyQueue()
 */
 MemoryUsage SimOS::GetMemory()
 {
+    return ram_.getMemoryUsage();
 }
 
 /*
@@ -282,15 +284,15 @@ void SimOS::findParentProcessAndResumeIt()
     }
 }
 
-void SimOS::findChildrenProcessesAndTerminateThem()
+void SimOS::findChildrenProcessesAndTerminateThem(const std::vector<Process>::iterator& currProcess)
 {
-    std::vector<Process>::iterator currProcess = findProcess(cpu_.getCurrentProcess());
     bool foundChildProcess = false;
     for(int i = 0; i < currProcess->getChildProcesses().size()-1; i++)
     {
         foundChildProcess = true;
         int childProcess = currProcess->getChildProcesses()[i];
         allProcesses_[childProcess].setProcessState(TERMINATED);
+        ram_.findAndClearMemoryUsedByAProcess(childProcess);
     }
     //Anything below is used for debugging
     if(foundChildProcess)

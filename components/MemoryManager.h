@@ -2,6 +2,7 @@
 #define MEMORYMANAGER_H
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include "Process.h"
 
 struct MemoryItem
@@ -33,11 +34,13 @@ public:
     //Utilites
     void accessMemoryAtAddress(const int& processID, const unsigned long long& address);
     unsigned long long getPageNumber(const unsigned long long& address);
+    void findAndClearMemoryUsedByAProcess(const int& processID);
 private:
     unsigned long long amountOfRam_;
     unsigned int pageSize_;
     unsigned int numPages_;
-    std::vector<MemoryItem> memory_;
-    MemoryItem recentlyUsed_;
+    
+    MemoryUsage memory_;
+    std::deque<unsigned long long> previouslyUsedFrames_;
 };
 #endif
