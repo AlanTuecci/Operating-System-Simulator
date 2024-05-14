@@ -1,9 +1,10 @@
+// Alan Tuecci
 #include "CPUManager.h"
 
 /*
-    @post   Ready queue is initialized with 0 elements
-            CPU ID initialized to 0
-            Current Process is set to some dummy process with PID 0 and state 'NO_PROCESS'
+    @post   Ready queue is initialized with 0 elements.
+            CPU ID initialized to 0.
+            Current Process is set to some dummy process with PID 0 and state 'NO_PROCESS'.
 */
 CPUManager::CPUManager(): 
     readyQueue_{0}, cpu_{0},
@@ -12,8 +13,8 @@ CPUManager::CPUManager():
 }
 
 /*
-    @param  A const Lvalue reference to a CPUManager object
-    @post   CPUManager object constructed to be an exact copy of the parameter object
+    @param  A const Lvalue reference to a CPUManager object.
+    @post   CPUManager object constructed to be an exact copy of the parameter object.
 */
 CPUManager::CPUManager(const CPUManager& rhs):
     readyQueue_{std::move(rhs.readyQueue_)}, 
@@ -23,9 +24,9 @@ CPUManager::CPUManager(const CPUManager& rhs):
 }   
 
 /*
-    @param  A const Lvalue reference to a CPUManager object
-    @post   CPUManager object is set to be an exact copy of the parameter object
-    @return A reference to the CPUManager object
+    @param  A const Lvalue reference to a CPUManager object.
+    @post   CPUManager object is set to be an exact copy of the parameter object.
+    @return A reference to the CPUManager object.
 */
 CPUManager& CPUManager::operator=(const CPUManager& rhs)
 {
@@ -37,8 +38,8 @@ CPUManager& CPUManager::operator=(const CPUManager& rhs)
 }  
 
 /*
-    @param  An Rvalue reference to a CPUManager object
-    @post   CPUManager object constructed to be an exact copy of the parameter object
+    @param  An Rvalue reference to a CPUManager object.
+    @post   CPUManager object constructed to be an exact copy of the parameter object.
 */
 CPUManager::CPUManager(CPUManager&& rhs):
     readyQueue_{std::move(rhs.readyQueue_)}, 
@@ -48,9 +49,9 @@ CPUManager::CPUManager(CPUManager&& rhs):
 }          
 
 /*
-    @param  An Rvalue reference to a CPUManager object
-    @post   CPUManager object is set to be an exact copy of the parameter object
-    @return A reference to the CPUManager object
+    @param  An Rvalue reference to a CPUManager object.
+    @post   CPUManager object is set to be an exact copy of the parameter object.
+    @return A reference to the CPUManager object.
 */
 CPUManager& CPUManager::operator=(CPUManager&& rhs)
 {
@@ -62,9 +63,9 @@ CPUManager& CPUManager::operator=(CPUManager&& rhs)
 }       
 
 /*
-    @param  A reference to a process object
-    @post   If there is no currently running process, the process begins running instantly with state 'Running'
-            Otherwise, the process is added to the ready queue with state 'Ready'
+    @param  A reference to a process object.
+    @post   If there is no currently running process, the process begins running instantly with state 'Running'.
+            Otherwise, the process is added to the ready queue with state 'Ready'.
 */
 void CPUManager::addProcess(Process &process)
 {
@@ -81,8 +82,8 @@ void CPUManager::addProcess(Process &process)
 }
 
 /*
-    @post   If the ready queue is not empty, the CPU begins running the first process in the ready queue
-            Note: This function immediately overwrites the data of the currently running process, so to avoid losing it, save it before calling this function
+    @post   If the ready queue is not empty, the CPU begins running the first process in the ready queue.
+            Note: This function immediately overwrites the data of the currently running process, so to avoid losing it, save it before calling this function.
 */
 void CPUManager::runFirstProcess()
 {
@@ -96,7 +97,7 @@ void CPUManager::runFirstProcess()
 
 /*
     @post   The currently running process is immediately killed and all data is cleared.
-            The currently running process member of the class will be set to a dummy process that has PID 0 and state 'NO_PROCESS'
+            The currently running process member of the class will be set to a dummy process that has PID 0 and state 'NO_PROCESS'.
 */
 void CPUManager::killRunningProcess()
 {
@@ -105,9 +106,9 @@ void CPUManager::killRunningProcess()
 }
 
 /*
-    @post   The currently running process is moved to the back of the ready queue with state 'Ready'
-            The first process in the ready queue begins executing with state 'Running'
-            If the ready queue is empty, the process that was just paused by the timer interrupt resumes running as there are no processes waiting to be executed
+    @post   The currently running process is moved to the back of the ready queue with state 'Ready'.
+            The first process in the ready queue begins executing with state 'Running'.
+            If the ready queue is empty, the process that was just paused by the timer interrupt resumes running as there are no processes waiting to be executed.
 */
 void CPUManager::timerInterrupt()
 {
@@ -119,7 +120,7 @@ void CPUManager::timerInterrupt()
 }
 
 /*
-    @return A flag that indicates whether or not the CPU is currently running a process
+    @return A flag that indicates whether or not the CPU is currently running a process.
 */
 bool CPUManager::isBusy() const
 {
@@ -127,8 +128,8 @@ bool CPUManager::isBusy() const
 }
 
 /*
-    @return The process that is currently being executed 
-            Throws an exception if there is no process that is currently running
+    @return The process that is currently being executed.
+            Throws an exception if there is no process that is currently running.
 */
 Process CPUManager::getCurrentProcess() const
 {
@@ -139,8 +140,8 @@ Process CPUManager::getCurrentProcess() const
 }
 
 /*
-    @return The ID of the process that is currently being executed 
-            Throws an exception if there is no process that is currently running
+    @return The ID of the process that is currently being executed.
+            Throws an exception if there is no process that is currently running.
 */
 int CPUManager::getCurrentProcessID() const
 {
@@ -150,10 +151,8 @@ int CPUManager::getCurrentProcessID() const
         throw std::logic_error("There is no currently running process.");
 }
 
-
-
 /*
-    @return The ready queue
+    @return The ready queue.
 */
 std::deque<Process> CPUManager::getReadyQueue() const
 {

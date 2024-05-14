@@ -1,3 +1,4 @@
+// Alan Tuecci
 #ifndef CPUMANAGER_H
 #define CPUMANAGER_H
 #include <deque>

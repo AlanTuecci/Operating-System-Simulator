@@ -1,3 +1,4 @@
+// Alan Tuecci
 #ifndef DISKMANAGER_H
 #define DISKMANAGER_H
 #include "Process.h"
@@ -38,10 +39,3 @@ private:
     std::deque<std::pair <FileReadRequest, Process>> diskQueue_;
 };
 #endif
-
-/*Note to self: You need to figure out a better way to manage processes
-                Having a bunch of queues in a bunch of places make tracking things harder than they need to be
-  Possible fix: Try making a vector of pairs in the SimOS class
-                The pairs will have a process object and its location
-  --Sunday, April 28, 2024
-*/            

@@ -1,3 +1,4 @@
+// Alan Tuecci
 #ifndef SIMOS_H
 #define SIMOS_H
 #include <vector>

@@ -1,9 +1,12 @@
+// Alan Tuecci
 #include "DiskManager.h"
 
 //--------------------------------------------Constructors--------------------------------------------
 
-DiskManager::DiskManager():
-    diskQueue_{}
+/*
+    @post   Disk Manager object initialized with placeholder values.
+*/
+DiskManager::DiskManager() : diskQueue_{}
 {
     FileReadRequest noJobFile{0, ""};
     Process noJobProcess(0, NO_PROCESS);
@@ -13,49 +16,80 @@ DiskManager::DiskManager():
 
 //--------------------------------------------Setters--------------------------------------------
 
-void DiskManager::setDiskQueue(const std::deque<std::pair<FileReadRequest, Process>>& diskQueue)
+/*
+    @param  A const lvalue reference to deque of pairs of FileReadRequest and Process objects.
+    @post   The disk queue is updated to be an exact copy of the parameter.
+*/
+void DiskManager::setDiskQueue(const std::deque<std::pair<FileReadRequest, Process>> &diskQueue)
 {
     diskQueue_ = diskQueue;
 }
 
-void DiskManager::setCurrentFileReadRequest(const FileReadRequest& fileReadRequest)
+/*
+    @param  A const lvalue reference to a FileReadRequest object.
+    @post   The current FileReadRequest object is updated to be an exact copy of the parameter.
+*/
+void DiskManager::setCurrentFileReadRequest(const FileReadRequest &fileReadRequest)
 {
     currentJob_.first = fileReadRequest;
 }
 
-void DiskManager::setCurrentProcess(const Process& process)
+/*
+    @param  A const lvalue reference to a Process object.
+    @post   The current Process object is updated to be an exact copy of the parameter.
+*/
+void DiskManager::setCurrentProcess(const Process &process)
 {
     currentJob_.second = process;
 }
 
-void DiskManager::setCurrentJob(const std::pair<FileReadRequest, Process>& job)
+/*
+    @param  A const lvalue reference to a pair of FileReadRequests and Processes.
+    @post   The current Job pair is updated to be an exact copy of the parameter.
+*/
+void DiskManager::setCurrentJob(const std::pair<FileReadRequest, Process> &job)
 {
     currentJob_ = job;
 }
 
 //--------------------------------------------Getters--------------------------------------------
 
-std::deque<std::pair<FileReadRequest,Process>> DiskManager::getDiskQueue() const
+/*
+    @return The disk queue.
+*/
+std::deque<std::pair<FileReadRequest, Process>> DiskManager::getDiskQueue() const
 {
     return diskQueue_;
 }
 
+/*
+    @return The current FileReadRequest object.
+*/
 FileReadRequest DiskManager::getCurrentFileReadRequest()
 {
     return currentJob_.first;
 }
 
+/*
+    @return The current Process object.
+*/
 Process DiskManager::getCurrentProcess() const
 {
     return currentJob_.second;
 }
 
+/*
+    @return The current pair of FileReadRequests and Processes.
+*/
 std::pair<FileReadRequest, Process> DiskManager::getCurrentJob() const
 {
     return currentJob_;
 }
 
-std::deque<FileReadRequest> DiskManager::getWaitingFileReadRequests() 
+/*
+    @return A deque of waiting FileReadRequests.
+*/
+std::deque<FileReadRequest> DiskManager::getWaitingFileReadRequests()
 {
     std::deque<FileReadRequest> waitingFileReadRequests;
     for(std::deque<std::pair<FileReadRequest, Process>>::iterator i = diskQueue_.begin(); i != diskQueue_.end(); i++)
@@ -67,7 +101,11 @@ std::deque<FileReadRequest> DiskManager::getWaitingFileReadRequests()
 
 //--------------------------------------------Utilities--------------------------------------------
 
-void DiskManager::addToQueue(const std::pair<FileReadRequest,Process>& job)
+/*
+    @param  A const lvalue reference to a pair of FileReadRequests and Processes.
+    @post   The job is either handled immediately or is sent to the IO queue depending on whether or not theres already a job being handled.
+*/
+void DiskManager::addToQueue(const std::pair<FileReadRequest, Process> &job)
 {
     if(currentJob_.second.getProcessState() == NO_PROCESS)
         currentJob_ = job;
@@ -75,6 +113,9 @@ void DiskManager::addToQueue(const std::pair<FileReadRequest,Process>& job)
         diskQueue_.push_back(job);
 }
 
+/*
+    @post   The next request is handled or if there are no waiting requests, then the current request is cleared.
+*/
 void DiskManager::serveNextProcess()
 {
     if(!diskQueue_.empty())
@@ -83,12 +124,12 @@ void DiskManager::serveNextProcess()
         diskQueue_.pop_front();
     }
     else
-    {
-        std::cout << "There are no other jobs waiting. Disk is now idle!" << std::endl;
         clearCurrentJob();
-    }
 }
 
+/*
+    @post   The current request is cleared.
+*/
 void DiskManager::clearCurrentJob()
 {
     currentJob_.first.fileName = "";

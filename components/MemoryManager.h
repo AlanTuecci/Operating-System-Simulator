@@ -1,7 +1,9 @@
+// Alan Tuecci
 #ifndef MEMORYMANAGER_H
 #define MEMORYMANAGER_H
 #include <iostream>
 #include <vector>
+#include <deque>
 #include <algorithm>
 #include "Process.h"
 

@@ -1,3 +1,4 @@
+// Alan Tuecci
 #include "SimOS.h"
 
 /*
@@ -260,9 +261,12 @@ std::deque<FileReadRequest> SimOS::GetDiskQueue(int diskNumber)
     }
 }
 
+/*
+    @post   Finds the waiting parent process of the currently running process, and changes its state from Waiting to Ready.
+            If parent is waiting, add it to the ready queue and delete it from the collection of waiting processes.
+*/
 void SimOS::findParentProcessAndResumeIt()
 {   
-    bool foundWaitingParent = false; //Used for Debugging
     const int parentProcessID = cpu_.getCurrentProcess().getParentProcessID();
     if(parentProcessID != 0)
     {
@@ -270,35 +274,34 @@ void SimOS::findParentProcessAndResumeIt()
         {
             if(i->getProcessID() == parentProcessID)
             {
-                foundWaitingParent = true; //Used for debugging
                 cpu_.addProcess(*i);
                 waitingProcesses_.erase(i);
                 break;
             }
         }
-        //Anything below here is used for debugging
-        if(!foundWaitingParent)
-            std::cout << "Could not find waiting parent!" << std::endl;
-        else
-            std::cout << "Parent with PID: *" << parentProcessID << "* found and added back to ready-queue!" << std::endl;
     }
 }
 
+/*
+    @param  A const lvalue iterator to a process in the collection of all processes.
+    @post   Finds, terminates, and clears any memory used by the children of the given process.
+*/
 void SimOS::findChildrenProcessesAndTerminateThem(const std::vector<Process>::iterator& currProcess)
 {
-    bool foundChildProcess = false;
     for(int i = 0; i < currProcess->getChildProcesses().size()-1; i++)
     {
-        foundChildProcess = true;
         int childProcess = currProcess->getChildProcesses()[i];
         allProcesses_[childProcess].setProcessState(TERMINATED);
         ram_.findAndClearMemoryUsedByAProcess(childProcess);
     }
-    //Anything below is used for debugging
-    if(foundChildProcess)
-        std::cout << "Found children processes and terminated them!" << std::endl;
 }
 
+/*
+    @param  A const lvalue reference to a process.
+    @return An iterator to a matching process in the collection of all processes.
+    
+    @note   Throws an exception if the iterator is pointing to Process 0 (The NO_PROCESS placeholder).
+*/
 std::vector<Process>::iterator SimOS::findProcess(const Process& process)
 {
     std::vector<Process>::iterator iteratorToProcess = allProcesses_.begin();
