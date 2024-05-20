@@ -3,7 +3,7 @@
 #define MEMORYMANAGER_H
 #include <iostream>
 #include <vector>
-#include <deque>
+#include <list>
 #include <algorithm>
 #include "Process.h"
 
@@ -37,12 +37,14 @@ public:
     void accessMemoryAtAddress(const int& processID, const unsigned long long& address);
     unsigned long long getPageNumber(const unsigned long long& address);
     void findAndClearMemoryUsedByAProcess(const int& processID);
+    void findAFrameAndSendItToFront(const unsigned long long& frameNumber);
+    void findAFrameAndSendItToBack(const unsigned long long& frameNumber);
 private:
     unsigned long long amountOfRam_;
     unsigned int pageSize_;
     unsigned int numPages_;
     
     MemoryUsage memory_;
-    std::deque<unsigned long long> previouslyUsedFrames_;
+    std::list<unsigned long long> previouslyUsedFrames_;
 };
 #endif

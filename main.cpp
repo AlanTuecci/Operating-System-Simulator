@@ -9,130 +9,157 @@
 #include "./components/Process.h"
 #include "./components/Process.cpp"
 #include <deque>
+#include <iostream>
+
+//Used to clear the terminal
+#ifndef CLEARTERMINAL_HPP
+#define CLEARTERMINAL_HPP
+    #include <iostream>
+    //Running Windows?
+    #ifdef _WIN32
+        #include <windows.h>
+    //Running Linux?
+    #else
+        #include <cstdlib>
+    #endif
+    void clearTerminal() {
+        #ifdef _WIN32
+            system("cls");
+        #else
+            system("clear");
+        #endif
+    }
+#endif
 
 int main()
 {
-    SimOS sim{3, 1000, 10};
-    bool allTestsClean{true};
+    int numHardDisks{0};
+    unsigned long long ramSize{0};
+    unsigned int pageSize{0};
+    short int numProcesses{0};
+    bool inputFlag{false};
 
-    if(sim.GetCPU() != NO_PROCESS) //Checking behavior when there is no process
+    clearTerminal();
+
+    std::cout << "Enter the amount of hard disks the system should have (you might want to make this a number above 1): ";
+    std::cin >> numHardDisks;
+    std::cout << std::endl;
+
+    std::cout << "Enter the page size (this should be something simple, like a multiple of 10): ";
+    std::cin >> pageSize;
+    std::cout << std::endl;
+
+    std::cout << "Enter the amount of RAM the system should have (this should be a multiple of the page size, otherwise the test won't work): ";
+    std::cin >> ramSize;
+    std::cout << std::endl;
+
+    std::cout << "Enter the amount of processes the system should be tested with: ";
+    std::cin >> numProcesses;
+    std::cout << std::endl;
+
+    std::cout << "Enter 1 to start (entering something else might kill the program unexpectedly): ";
+    std::cin >> inputFlag;
+    std::cout << std::endl;
+
+    if(!inputFlag || ramSize%pageSize != 0)  //Kill the program if the user didn't listen >:(
     {
-        allTestsClean = false;
-        std::cout << "Test on line 18 fails!" << std::endl;
-        std::cout << "Remember, no processes have been created, so there shouldn't be anything running!" << std::endl;
+        return 0;
     }
 
-    sim.NewProcess();
-    if(sim.GetCPU() != 1) //Checking behavior when a process is created
-    {
-        allTestsClean = false;
-        std::cout << "Test on line 26 fails!" << std::endl;
-        std::cout << "\tRemember, when a new process is created, if there are no currently running processes, it should begin running immediately!" << std::endl;
-    }
+    SimOS sim{numHardDisks, ramSize, pageSize};
 
-    sim.DiskReadRequest(0, "file1.txt");
-    if(sim.GetCPU() != NO_PROCESS)  //Checking to see if the process is removed from CPU usage when it requests to use the disk
-    {
-        allTestsClean = false;
-        std::cout << "Test on line 34 fails!" << std::endl;
-        std::cout << "\tRemember, when a process requests to use a disk, it immediately stops running and goes into the disk Queue!" << std::endl;
-    }
-
-    FileReadRequest request{sim.GetDisk(0)};    //Checking to see if the process is sent to the Disk Queue when it requests to use the disk
-    if(request.PID != 1 || request.fileName != "file1.txt")
-    {
-        allTestsClean = false;
-        std::cout << "Test on line 42 fails!" << std::endl;
-        std::cout << "\tRemember, there were no other processes attempting to use the disk, so the disk queue is empty. That means that the current disk request will be the one the process just made with PID 1 and fileName 'file1.txt'!" << std::endl;
-    }
-
-    std::deque<FileReadRequest> ioQueue0{sim.GetDiskQueue(0)};
-    if(ioQueue0.size() != 0)
-    {
-        allTestsClean = false;
-        std::cout << "Test on line 50 fails!" << std::endl;
-        std::cout << "\tRemember, since there are no other processes waiting to use the disk, the disk Queue should be empty!" << std::endl;
-    }
-
-    sim.DiskJobCompleted(0);
-    request = sim.GetDisk(0);
-    if(request.PID != NO_PROCESS || request.fileName != "")
-    {
-        allTestsClean = false;
-        std::cout << "Test on line 59 fails!" << std::endl;
-        std::cout << "\tRemember, the disk job is completed, so the disk should not have anything using it (unless there was a process in the disk queue)!" << std::endl;
-    }
-
-    if(sim.GetCPU() != 1)
-    {
-        allTestsClean = false;
-        std::cout << "Test on line 66 fails!" << std::endl;
-        std::cout << "\tRemember, since Process 1 is done using the disk, it goes back to the ready queue. Since the ready queue is empty, Process 1 should be run immediately!" << std::endl;
-    }
-
-    std::deque<int> readyQueue{sim.GetReadyQueue()};
-    if(readyQueue.size() != 0)
-    {
-        allTestsClean = false;
-        std::cout << "Test on line 74 fails!" << std::endl;
-        std::cout << "\tRemember, Process 1 just finished using the disk. There are no other processes so Process 1 begins using the CPU immediately. This means that the ready queue should be empty!" << std::endl;
-    }
-
-    sim.SimFork();
-    readyQueue = sim.GetReadyQueue();
-    if(readyQueue[0] != 2)
-    {
-        allTestsClean = false;
-        std::cout << "Test on line 83 fails!" << std::endl;
-        std::cout << "\tRemember, Process 1 is still running. The fork instruction just made a copy of Process 1. This new process cannot be run until process 1 is stopped!" << std::endl;
-    }
-
-    sim.TimerInterrupt();
-    readyQueue = sim.GetReadyQueue();
-    if(sim.GetCPU() != 2 || readyQueue[0] != 1)
-    {
-        allTestsClean = false;
-        std::cout << "Test on line 92 fails!" << std::endl;
-        std::cout << "\tRemember, timer interrupts immediately pause process execution and send them to the back of the ready queue. Since Process 1 got removed from execution, the first process in the ready-queue took its place. This means that now the current process is Process 2 and the only process in the ready queue is process 1!" << std::endl;
-    }
-
-    sim.SimExit();
-    readyQueue = sim.GetReadyQueue();
-    if(sim.GetCPU() != 1 || readyQueue.size() != 0)
-    {
-        allTestsClean = false;
-        std::cout << "Test on line 101 fails!" << std::endl;
-        std::cout << "\tRemember, Process 2 is currently running, and it was just killed. Process 2 is a child of Process 1, so Process 1 should immediately resume execution. So that means the only remaining process will be Process 1!" << std::endl;
-    }
+//--------Testing NewProcess() with 10 processes
+//--------Testing TimerInterrupt() by cycling through all the newly created processes
+//--------Testing GetCPU() by checking to see if the correct PID is being returned
+//--------Testing GetReadyQueue() by checking to see if the order of processes is correct
+    clearTerminal();
+    std::cout << "Checking NewProcess(), TimerInterrupt(), and GetCPU()" << std::endl;
+    std::cout << "You should see processes numbered 1 -> " << numProcesses << " appear in order\n" << std::endl;
     
-    sim.AccessMemoryAddress(140);
-    MemoryUsage ram{sim.GetMemory()};
-    if(ram[0].pageNumber != 14 || ram[0].PID != 1)
+    std::cout << "Expected order of processes: \t| ";
+    for(short int i = 1; i <= numProcesses; i++)
     {
-        allTestsClean = false;
-        std::cout << "Test on line 110 fails!" << std::endl;
-        std::cout << "\tRemember, the page size is 10, so an address of 140 maps to frame 14, and since the current process is Process 1, the PID should be 1!" << std::endl;
+        sim.NewProcess();
+        std::cout << i << " | ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Actual order of processes: \t| ";
+    for(short int i = 0; i < numProcesses; i++)
+    {
+        std::cout << sim.GetCPU() <<  " | ";
+        sim.TimerInterrupt();
+    }
+    std::cout << std::endl << std::endl;
+    
+    std::cout << "Checking current and ready processes: " << std::endl;
+    std::cout << "\tCurrent Process: | " << sim.GetCPU() << " | " << std::endl;
+    std::deque<int> readyQueue = sim.GetReadyQueue();
+    std::cout << "\tReady Processes: | ";
+    for(auto i : readyQueue)
+        std::cout << i << " | ";
+    std::cout << std::endl << std::endl;
+
+    std::cout << "The created and checked processes should be in the same order. If there is a mismatch, check NewProcess(), TimerInterrupt(), and GetCPU()" << std::endl;
+
+    std::cout << std::endl;
+
+//--------Testing DiskReadRequest()
+//--------Testing GetDisk()
+//--------Testing GetDiskQueue()
+//--------Testing DiskJobCompleted()
+    std::cout << "To proceed with testing, enter 1 (entering something else could unexpectedly terminate the program): ";
+    std::cin >> inputFlag;
+    std::cout << std::endl;
+
+    if(!inputFlag)
+        return 0;
+    clearTerminal();
+
+    std::cout << "Checking DiskReadRequest(), GetDisk(), GetDiskQueue(), DiskJobCompleted()" << std::endl;
+    std::cout << "The processes will be the same processes used in the previous round of testing" << std::endl;
+    std::cout << std::endl;
+    std::cout << "Beginning the flood of DiskReadRequests. Every process will make a DiskReadRequest" << std::endl;
+    std::cout << "The requested files will follow the form: 'Process-/PID/_FileNumber-/SomeNumber/" << std::endl;
+    std::cout << "All disks are going to be used" << std::endl << std::endl;
+
+    std::string tempString;
+    for(short int i = 1; i <= numProcesses; i++)
+    {
+        tempString = "Process-" + std::to_string(sim.GetCPU()) + "_FileNumber-" + std::to_string(i);
+        sim.DiskReadRequest((i-1)%numHardDisks, tempString);
     }
 
-    sim.SimWait();
-    if(sim.GetCPU() != 1)
+    std::cout << "All processes have made a FileReadRequest. There should be no process using the CPU now" << std::endl;
+    std::cout << "Current Process: " << sim.GetCPU() << std::endl;
+
+    std::cout << std::endl;
+    for(int i = 0; i < numHardDisks; i++)
     {
-        allTestsClean = false;
-        std::cout << "Test on line 118 fails!" << std::endl;
-        std::cout << "\tRemember, Process 1 has a zombie-child already, so it should resume execution immediately!" << std::endl;
+        std::cout << "Checking the state of Hard Disk: " << i << std::endl;
+        std::cout << "\tStatus\t| FileName" << std::endl;
+        std::cout << "\t----------------------------------------" << std::endl;
+        std::cout << "\tCurrent | " << sim.GetDisk(i).fileName << std::endl;
+        std::cout << "\t----------------------------------------" << std::endl;
+        for(auto x : sim.GetDiskQueue(i))
+            std::cout << "\tWaiting | " << x.fileName << std::endl;
+        std::cout << std::endl;
     }
 
-    sim.SimExit();
-    ram = sim.GetMemory();
-    if(sim.GetCPU() != NO_PROCESS || ram.size() != 0)
+    for(short int i = 1; i <= numProcesses; i++)
     {
-        allTestsClean = false;
-        std::cout << "Test on line 127 fails!" << std::endl;
-        std::cout << "\tRemember, Process 1 was the last process runnning. This means there are no other processes to replace it. Also, since there are no processes at all, there should be no ram usage!" << std::endl;
+        sim.DiskJobCompleted((i-1)%numHardDisks);
     }
+    std::cout << "Completing all disk jobs" << std::endl;
 
-    if(allTestsClean)
-        std::cout << "These preliminary tests have passed!" << std::endl;
+    std::cout << "Checking order of processes: " << std::endl;
+    std::cout << "\tCurrent Process: | " << sim.GetCPU() << " | " << std::endl;
+    std::deque<int> readyQueue2 = sim.GetReadyQueue();
+    std::cout << "\tReady Processes: | ";
+    for(auto i : readyQueue2)
+        std::cout << i << " | ";
+    std::cout << std::endl << std::endl;
 
+    std::cout << "End Test" << std::endl;
     return 0;
 }

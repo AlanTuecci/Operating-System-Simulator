@@ -1,14 +1,15 @@
 // Alan Tuecci
 #include "CPUManager.h"
 
+//--------------------------------------------Constructors--------------------------------------------
+
 /*
     @post   Ready queue is initialized with 0 elements.
-            CPU ID initialized to 0.
-            Current Process is set to some dummy process with PID 0 and state 'NO_PROCESS'.
+            Current Process is set to some dummy process ID with PID 0.
 */
 CPUManager::CPUManager(): 
-    readyQueue_{0}, cpu_{0},
-    currentProcess_{0, NO_PROCESS}
+    readyQueue_{},
+    currentProcess_{0}
 {
 }
 
@@ -18,8 +19,7 @@ CPUManager::CPUManager():
 */
 CPUManager::CPUManager(const CPUManager& rhs):
     readyQueue_{std::move(rhs.readyQueue_)}, 
-    currentProcess_{std::move(rhs.currentProcess_)}, 
-    cpu_{rhs.cpu_}
+    currentProcess_{rhs.currentProcess_}
 {
 }   
 
@@ -31,8 +31,7 @@ CPUManager::CPUManager(const CPUManager& rhs):
 CPUManager& CPUManager::operator=(const CPUManager& rhs)
 {
     readyQueue_ = std::move(rhs.readyQueue_);
-    currentProcess_ = std::move(rhs.currentProcess_);
-    cpu_ = rhs.cpu_;
+    currentProcess_ = rhs.currentProcess_;
 
     return *this;
 }  
@@ -43,8 +42,7 @@ CPUManager& CPUManager::operator=(const CPUManager& rhs)
 */
 CPUManager::CPUManager(CPUManager&& rhs):
     readyQueue_{std::move(rhs.readyQueue_)}, 
-    currentProcess_{std::move(rhs.currentProcess_)},
-    cpu_{rhs.cpu_}
+    currentProcess_{rhs.currentProcess_}
 {
 }          
 
@@ -56,42 +54,83 @@ CPUManager::CPUManager(CPUManager&& rhs):
 CPUManager& CPUManager::operator=(CPUManager&& rhs)
 {
     readyQueue_ = std::move(rhs.readyQueue_);
-    currentProcess_ = std::move(rhs.currentProcess_);
-    cpu_ = rhs.cpu_;
+    currentProcess_ = rhs.currentProcess_;
 
     return *this;
 }       
 
+//--------------------------------------------Setters--------------------------------------------
+
 /*
-    @param  A reference to a process object.
+    @post   Replaces the existing readyQueue with the one in the parameter.
+*/
+void CPUManager::setReadyQueue(const std::deque<int>& readyQueue)
+{
+    readyQueue_ = readyQueue;
+}
+
+//--------------------------------------------Getters--------------------------------------------
+
+/*
+    @return The ID of the process that is currently being executed.
+            Throws an exception if there is no process that is currently running.
+*/
+int CPUManager::getCurrentProcessID() const
+{
+    if(currentProcess_ != NO_PROCESS)
+        return currentProcess_;
+    else
+        throw std::logic_error("There is no currently running process.");
+}
+
+/*
+    @return The ready queue.
+*/
+std::deque<int> CPUManager::getReadyQueue() const
+{
+    return readyQueue_;
+}
+
+//--------------------------------------------Utilities--------------------------------------------
+
+/*
+    @param  A reference to a process ID.
     @post   If there is no currently running process, the process begins running instantly with state 'Running'.
             Otherwise, the process is added to the ready queue with state 'Ready'.
+    @return READY if the process was sent to the readyqueue, RUNNING if the process immediately began using the CPU
 */
-void CPUManager::addProcess(Process &process)
+int CPUManager::addProcess(const int &process)
 {
-    if (currentProcess_.getProcessState() != NO_PROCESS && currentProcess_.getProcessID() != 0)
+    if (currentProcess_ != 0)
     {
-        process.setProcessState(READY);
         readyQueue_.push_back(process);
+        return READY;
     }
     else
     {
-        process.setProcessState(RUNNING);
         currentProcess_ = process;
+        return RUNNING;
     }
 }
 
 /*
     @post   If the ready queue is not empty, the CPU begins running the first process in the ready queue.
             Note: This function immediately overwrites the data of the currently running process, so to avoid losing it, save it before calling this function.
+    @return An std::pair object with the first element being the PID of the new current process, and the second element being the current process's new state.
+            std::pair<0, 0> if there are no other processes in the ready queue.
 */
-void CPUManager::runFirstProcess()
+std::pair<int, int> CPUManager::runFirstProcess()
 {
     if (!readyQueue_.empty())
     {
         currentProcess_ = readyQueue_.front();
         readyQueue_.pop_front();
-        currentProcess_.setProcessState(RUNNING);
+        return std::make_pair(currentProcess_, RUNNING);    //Return the currentProcess PID and its current state
+    }
+    else
+    {
+        killRunningProcess();
+        return std::make_pair(0, 0);    //Return some placeholder showing no process
     }
 }
 
@@ -101,22 +140,20 @@ void CPUManager::runFirstProcess()
 */
 void CPUManager::killRunningProcess()
 {
-    currentProcess_.setProcessID(0);
-    currentProcess_.setProcessState(NO_PROCESS);
+    currentProcess_ = 0;
 }
 
 /*
     @post   The currently running process is moved to the back of the ready queue with state 'Ready'.
             The first process in the ready queue begins executing with state 'Running'.
             If the ready queue is empty, the process that was just paused by the timer interrupt resumes running as there are no processes waiting to be executed.
+    @return An std::pair object with the first element being the PID of the current Process and the second element being the state of the current process.
 */
-void CPUManager::timerInterrupt()
+std::pair<int, int> CPUManager::timerInterrupt()
 {
-    Process currentProcess = currentProcess_;
+    addProcess(currentProcess_);
     killRunningProcess();
-    runFirstProcess();
-    currentProcess.setProcessState(READY);
-    addProcess(currentProcess);
+    return runFirstProcess();
 }
 
 /*
@@ -124,37 +161,5 @@ void CPUManager::timerInterrupt()
 */
 bool CPUManager::isBusy() const
 {
-    return currentProcess_.getProcessState() != NO_PROCESS;
-}
-
-/*
-    @return The process that is currently being executed.
-            Throws an exception if there is no process that is currently running.
-*/
-Process CPUManager::getCurrentProcess() const
-{
-    if(currentProcess_.getProcessState() != NO_PROCESS)
-        return currentProcess_;
-    else
-        throw std::logic_error("There is no currently running process.");
-}
-
-/*
-    @return The ID of the process that is currently being executed.
-            Throws an exception if there is no process that is currently running.
-*/
-int CPUManager::getCurrentProcessID() const
-{
-    if(currentProcess_.getProcessState() != NO_PROCESS)
-        return currentProcess_.getProcessID();
-    else
-        throw std::logic_error("There is no currently running process.");
-}
-
-/*
-    @return The ready queue.
-*/
-std::deque<Process> CPUManager::getReadyQueue() const
-{
-    return readyQueue_;
+    return currentProcess_ != NO_PROCESS;
 }

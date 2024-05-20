@@ -15,7 +15,7 @@ enum Type
     REGULAR,    //Indicates that the process has no parent and no children
     PARENT,     //Indicates that the process has at least 1 child
     CHILD,      //Indicates that the process has a parent
-    ZOMBIE      //Indicates that the process is a child who's parent terminated without calling wait
+    ZOMBIE      //Indicates that the process is terminated but its parent has not yet called SimWait()
 };
 
 class Process
@@ -36,8 +36,6 @@ public:
     void setProcessID(const int& processID);
     void setProcessState(const int& processState);
     void setProcessType(const Type& processType);
-    void addChildProcessID(const int& childProcessID);
-    void removeChildProcessFromRecord(const int& childProcessID);
 
     //Getters
     int getProcessID() const;
@@ -45,6 +43,10 @@ public:
     Type getProcessType() const;
     std::vector<int> getChildProcesses() const;
     int getParentProcessID() const;
+
+    //Utilities
+    void addChildProcessID(const int& childProcessID);
+    void removeChildProcessFromRecord(const int& childProcessID);
 
     //Overloaded Operators
     bool operator==(const Process& rhs) const;

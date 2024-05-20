@@ -18,24 +18,19 @@ public:
     DiskManager();
 
     //Setters
-    void setDiskQueue(const std::deque<std::pair<FileReadRequest,Process>>& diskQueue);
+    void setDiskQueue(const std::deque<FileReadRequest>& diskQueue);
     void setCurrentFileReadRequest(const FileReadRequest& fileReadRequest);
-    void setCurrentProcess(const Process& process);
-    void setCurrentJob(const std::pair<FileReadRequest,Process>& job);
 
     //Getters
-    std::deque<std::pair<FileReadRequest,Process>> getDiskQueue() const;
-    FileReadRequest getCurrentFileReadRequest();
-    Process getCurrentProcess() const;
-    std::pair<FileReadRequest, Process> getCurrentJob() const;
-    std::deque<FileReadRequest> getWaitingFileReadRequests();
+    std::deque<FileReadRequest> getDiskQueue() const;
+    FileReadRequest getCurrentFileReadRequest() const;
 
     //Utilities
-    void addToQueue(const std::pair<FileReadRequest, Process>& job);
+    void addToQueue(const FileReadRequest& job);
     void serveNextProcess();
     void clearCurrentJob();
 private:
-    std::pair<FileReadRequest, Process> currentJob_;
-    std::deque<std::pair <FileReadRequest, Process>> diskQueue_;
+    FileReadRequest currentJob_;
+    std::deque<FileReadRequest> diskQueue_;
 };
 #endif

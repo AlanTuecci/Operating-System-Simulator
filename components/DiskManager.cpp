@@ -9,9 +9,7 @@
 DiskManager::DiskManager() : diskQueue_{}
 {
     FileReadRequest noJobFile{0, ""};
-    Process noJobProcess(0, NO_PROCESS);
-    currentJob_.first = noJobFile;
-    currentJob_.second = noJobProcess;
+    currentJob_ = noJobFile;
 }
 
 //--------------------------------------------Setters--------------------------------------------
@@ -20,7 +18,7 @@ DiskManager::DiskManager() : diskQueue_{}
     @param  A const lvalue reference to deque of pairs of FileReadRequest and Process objects.
     @post   The disk queue is updated to be an exact copy of the parameter.
 */
-void DiskManager::setDiskQueue(const std::deque<std::pair<FileReadRequest, Process>> &diskQueue)
+void DiskManager::setDiskQueue(const std::deque<FileReadRequest> &diskQueue)
 {
     diskQueue_ = diskQueue;
 }
@@ -31,25 +29,7 @@ void DiskManager::setDiskQueue(const std::deque<std::pair<FileReadRequest, Proce
 */
 void DiskManager::setCurrentFileReadRequest(const FileReadRequest &fileReadRequest)
 {
-    currentJob_.first = fileReadRequest;
-}
-
-/*
-    @param  A const lvalue reference to a Process object.
-    @post   The current Process object is updated to be an exact copy of the parameter.
-*/
-void DiskManager::setCurrentProcess(const Process &process)
-{
-    currentJob_.second = process;
-}
-
-/*
-    @param  A const lvalue reference to a pair of FileReadRequests and Processes.
-    @post   The current Job pair is updated to be an exact copy of the parameter.
-*/
-void DiskManager::setCurrentJob(const std::pair<FileReadRequest, Process> &job)
-{
-    currentJob_ = job;
+    currentJob_ = fileReadRequest;
 }
 
 //--------------------------------------------Getters--------------------------------------------
@@ -57,7 +37,7 @@ void DiskManager::setCurrentJob(const std::pair<FileReadRequest, Process> &job)
 /*
     @return The disk queue.
 */
-std::deque<std::pair<FileReadRequest, Process>> DiskManager::getDiskQueue() const
+std::deque<FileReadRequest> DiskManager::getDiskQueue() const
 {
     return diskQueue_;
 }
@@ -65,38 +45,9 @@ std::deque<std::pair<FileReadRequest, Process>> DiskManager::getDiskQueue() cons
 /*
     @return The current FileReadRequest object.
 */
-FileReadRequest DiskManager::getCurrentFileReadRequest()
-{
-    return currentJob_.first;
-}
-
-/*
-    @return The current Process object.
-*/
-Process DiskManager::getCurrentProcess() const
-{
-    return currentJob_.second;
-}
-
-/*
-    @return The current pair of FileReadRequests and Processes.
-*/
-std::pair<FileReadRequest, Process> DiskManager::getCurrentJob() const
+FileReadRequest DiskManager::getCurrentFileReadRequest() const
 {
     return currentJob_;
-}
-
-/*
-    @return A deque of waiting FileReadRequests.
-*/
-std::deque<FileReadRequest> DiskManager::getWaitingFileReadRequests()
-{
-    std::deque<FileReadRequest> waitingFileReadRequests;
-    for(std::deque<std::pair<FileReadRequest, Process>>::iterator i = diskQueue_.begin(); i != diskQueue_.end(); i++)
-    {
-        waitingFileReadRequests.push_back(i->first);
-    }
-    return waitingFileReadRequests;
 }
 
 //--------------------------------------------Utilities--------------------------------------------
@@ -105,9 +56,9 @@ std::deque<FileReadRequest> DiskManager::getWaitingFileReadRequests()
     @param  A const lvalue reference to a pair of FileReadRequests and Processes.
     @post   The job is either handled immediately or is sent to the IO queue depending on whether or not theres already a job being handled.
 */
-void DiskManager::addToQueue(const std::pair<FileReadRequest, Process> &job)
+void DiskManager::addToQueue(const FileReadRequest &job)
 {
-    if(currentJob_.second.getProcessState() == NO_PROCESS)
+    if(currentJob_.PID == 0)
         currentJob_ = job;
     else
         diskQueue_.push_back(job);
@@ -132,9 +83,6 @@ void DiskManager::serveNextProcess()
 */
 void DiskManager::clearCurrentJob()
 {
-    currentJob_.first.fileName = "";
-    currentJob_.first.PID = 0;
-
-    Process emptyProcess(0, NO_PROCESS);
-    currentJob_.second = emptyProcess;
+    currentJob_.fileName = "";
+    currentJob_.PID = 0;
 }

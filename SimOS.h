@@ -27,9 +27,12 @@ public:
     std::deque<FileReadRequest> GetDiskQueue(int diskNumber);
 
     //Helper functions
-    void findParentProcessAndResumeIt();
-    void findChildrenProcessesAndTerminateThem(const std::vector<Process>::iterator& currProcess);
+    bool findParentProcessAndResumeIt(const int& parentProcessID);
+    void findChildrenProcessesAndTerminateThem(const int& currProcessID);
+    bool findZombieProcessAndTerminateIt();
     std::vector<Process>::iterator findProcess(const Process& process);
+    std::vector<Process>::iterator findProcessByID(const int& processID);
+    void findAndRemoveZombiesOrTerminatedProcesses();
 private:
     CPUManager cpu_;
     std::vector<DiskManager> disks_;

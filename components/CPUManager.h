@@ -15,23 +15,23 @@ public:
     CPUManager& operator=(const CPUManager& rhs);   
     CPUManager(CPUManager&& rhs);                   
     CPUManager& operator=(CPUManager&& rhs);        
-    
-    //Utility Functions
-    void addProcess(Process& process);
-    void runFirstProcess();
-    void killRunningProcess();
-    void timerInterrupt();
+
+    //Setters
+    void setReadyQueue(const std::deque<int>& readyQueue);
 
     //Getters
     bool isBusy() const;
-    Process getCurrentProcess() const;
     int getCurrentProcessID() const;
-    std::deque<Process> getReadyQueue() const;
+    std::deque<int> getReadyQueue() const;
+
+    //Utility Functions
+    int addProcess(const int& process);
+    std::pair<int, int> runFirstProcess();
+    void killRunningProcess();
+    std::pair<int, int> timerInterrupt();
 private:
-    std::deque<Process> readyQueue_;
-    std::list<Process> waitingProcesses_;
-    Process currentProcess_;
-    int cpu_;
+    std::deque<int> readyQueue_;
+    int currentProcess_;
 };
 
 #endif
