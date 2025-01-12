@@ -3,7 +3,7 @@
 
 ### This project is designed to simulate the internal workings of an operating system including:
 - Process Management
-  - You can create, fork, exit, or call wait on processses. Note: Process termination is done with cascading termination.
+  - You can create, fork, exit, or call wait on processes. Note: Process termination is done with cascading termination.
 - Process Scheduling
   - Round-robin scheduling guarantees fair CPU resource allocation amongst processes. Processes are given a time limit for CPU usage, and if their execution time exceeds this allotted time, it is moved to the back of the ready-queue, allowing the next process to run.
 - Memory Management
